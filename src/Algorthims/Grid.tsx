@@ -14,7 +14,7 @@ class Grid {
     this.cells = previousState ? this.fromState(previousState) : this.empty();
   }
 
-  empty() {
+  empty(): (Tile | null)[][] {
     const cells: (Tile | null)[][] = [];
 
     for (let x = 0; x < this.size; x++) {
@@ -57,7 +57,7 @@ class Grid {
     }
   }
 
-  availableCells() {
+  availableCells(): Position[] {
     const cells: Position[] = [];
 
     this.eachCell((x, y, tile) => {
@@ -69,7 +69,7 @@ class Grid {
     return cells;
   }
 
-  eachCell(callback: (x: number, y: number, tile: Tile | null) => void) {
+  eachCell(callback: (x: number, y: number, tile: Tile | null) => void): void {
     for (let x = 0; x < this.size; x++) {
       for (let y = 0; y < this.size; y++) {
         callback(x, y, this.cells[x][y]);
@@ -77,15 +77,15 @@ class Grid {
     }
   }
 
-  cellsAvailable() {
+  cellsAvailable(): boolean {
     return !!this.availableCells().length;
   }
 
-  cellAvailable(cell: Position) {
+  cellAvailable(cell: Position): boolean {
     return !this.cellOccupied(cell);
   }
 
-  cellOccupied(cell: Position) {
+  cellOccupied(cell: Position): boolean {
     return !!this.cellContent(cell);
   }
 
@@ -97,27 +97,15 @@ class Grid {
     }
   }
 
-  insertTile(tile: Tile) {
-    if (this.withinBounds({ x: tile.x, y: tile.y })) {
-      this.cells[tile.x][tile.y] = tile;
-    } else {
-      console.error(
-        `Trying to insert a tile out of bounds at (${tile.x}, ${tile.y})`
-      );
-    }
+  insertTile(tile: Tile): void {
+    this.cells[tile.x][tile.y] = tile;
   }
 
-  removeTile(tile: Tile) {
-    if (this.withinBounds({ x: tile.x, y: tile.y })) {
-      this.cells[tile.x][tile.y] = null;
-    } else {
-      console.error(
-        `Trying to remove a tile out of bounds at (${tile.x}, ${tile.y})`
-      );
-    }
+  removeTile(tile: Tile): void {
+    this.cells[tile.x][tile.y] = null;
   }
 
-  withinBounds(position: Position) {
+  withinBounds(position: Position): boolean {
     return (
       position.x >= 0 &&
       position.x < this.size &&
@@ -126,7 +114,10 @@ class Grid {
     );
   }
 
-  serialize() {
+  serialize(): {
+    size: number;
+    cells: ({ position: Position; value: number } | null)[][];
+  } {
     const cellState: ({ position: Position; value: number } | null)[][] = [];
 
     for (let x = 0; x < this.size; x++) {
@@ -143,7 +134,7 @@ class Grid {
     };
   }
 
-  clone() {
+  clone(): Grid {
     const newGrid = new Grid(this.size);
     for (let x = 0; x < this.size; x++) {
       for (let y = 0; y < this.size; y++) {
@@ -197,7 +188,7 @@ class Grid {
     return score;
   }
 
-  prepareTiles() {
+  prepareTiles(): void {
     this.eachCell((x, y, tile) => {
       if (tile) {
         tile.mergedFrom = null;
@@ -206,24 +197,24 @@ class Grid {
     });
   }
 
-  moveTile(tile: Tile, cell: Position) {
+  moveTile(tile: Tile, cell: Position): void {
     this.cells[tile.x][tile.y] = null;
     this.cells[cell.x][cell.y] = tile;
     tile.updatePosition(cell);
   }
 
-  getVector(direction: number) {
-    const map: { [key: number]: { x: number; y: number } } = {
-      0: { x: 0, y: -1 },
-      1: { x: 1, y: 0 },
-      2: { x: 0, y: 1 },
-      3: { x: -1, y: 0 },
+  getVector(direction: number): Position {
+    const map: { [key: number]: Position } = {
+      0: { x: 0, y: -1 }, // Up
+      1: { x: 1, y: 0 }, // Right
+      2: { x: 0, y: 1 }, // Down
+      3: { x: -1, y: 0 }, // Left
     };
 
     return map[direction];
   }
 
-  buildTraversals(vector: { x: number; y: number }) {
+  buildTraversals(vector: Position): { x: number[]; y: number[] } {
     const traversals: { x: number[]; y: number[] } = { x: [], y: [] };
 
     for (let pos = 0; pos < this.size; pos++) {
@@ -237,8 +228,11 @@ class Grid {
     return traversals;
   }
 
-  findFarthestPosition(cell: Position, vector: { x: number; y: number }) {
-    let previous;
+  findFarthestPosition(
+    cell: Position,
+    vector: Position
+  ): { farthest: Position; next: Position } {
+    let previous: Position;
 
     do {
       previous = cell;
@@ -247,18 +241,18 @@ class Grid {
 
     return {
       farthest: previous,
-      next: cell,
+      next: cell, // Used to check if a merge is required
     };
   }
 
-  positionsEqual(first: Position, second: Position) {
+  positionsEqual(first: Position, second: Position): boolean {
     return first.x === second.x && first.y === second.y;
   }
 
   equals(grid: Grid): boolean {
     for (let x = 0; x < this.size; x++) {
       for (let y = 0; y < this.size; y++) {
-        if (this.cells[x][y] && grid.cells[x][y]) {
+        if (!!this.cells[x][y] && !!grid.cells[x][y]) {
           if (this.cells[x][y]!.value !== grid.cells[x][y]!.value) {
             return false;
           }
