@@ -154,7 +154,7 @@ export const App: React.FC = () => {
                 style={{ float: "right" }}
                 type="number"
                 min="1"
-                max="999"
+                max="3"
                 defaultValue="3"
               />
             </div>

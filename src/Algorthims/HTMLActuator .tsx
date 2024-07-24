@@ -52,13 +52,13 @@ class HTMLActuator {
         this.updateBestScore(metadata.bestScore);
       }
 
-      if (metadata.terminated) {
-        if (metadata.over) {
-          this.message(false); // You lose
-        } else if (metadata.won) {
-          this.message(true); // You win!
-        }
-      }
+      //   if (metadata.terminated) {
+      //     if (metadata.over) {
+      //       this.message(false); // You lose
+      //     } else if (metadata.won) {
+      //       this.message(true); // You win!
+      //     }
+      //   }
     });
   }
 
@@ -155,25 +155,25 @@ class HTMLActuator {
     }
   }
 
-  message(won: boolean): void {
-    if (!this.messageContainer) return;
+  //   message(won: boolean): void {
+  //     if (!this.messageContainer) return;
 
-    const type = won ? "game-won" : "game-over";
-    const message = won ? "You win!" : "Game over!";
+  //     const type = won ? "game-won" : "game-over";
+  //     const message = won ? "You win!" : "TEST over!";
 
-    if (typeof ga !== "undefined") {
-      ga("send", "event", "game", "end", type, this.score);
-    }
+  //     if (typeof ga !== "undefined") {
+  //       ga("send", "event", "game", "end", type, this.score);
+  //     }
 
-    this.messageContainer.classList.add(type);
-    this.messageContainer.getElementsByTagName("p")[0].textContent = message;
+  //     this.messageContainer.classList.add(type);
+  //     this.messageContainer.getElementsByTagName("p")[0].textContent = message;
 
-    if (this.sharingContainer) {
-      this.clearContainer(this.sharingContainer);
-      this.sharingContainer.appendChild(this.scoreTweetButton());
-      twttr.widgets.load();
-    }
-  }
+  //     if (this.sharingContainer) {
+  //       this.clearContainer(this.sharingContainer);
+  //       this.sharingContainer.appendChild(this.scoreTweetButton());
+  //       twttr.widgets.load();
+  //     }
+  //   }
 
   clearMessage(): void {
     if (!this.messageContainer) return;
