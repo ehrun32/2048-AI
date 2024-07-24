@@ -1,6 +1,80 @@
+import React, { useEffect } from "react";
 import "./App.css";
+import GameManager from "./Algorthims/GameManager";
+import KeyboardInputManager from "./Algorthims/KeyboardInputManager ";
+import HTMLActuator from "./Algorthims/HTMLActuator ";
+import LocalStorageManager from "./Algorthims/LocalStorageManager";
+import { applyClassListPolyfill } from "./Algorthims/polyfills";
 
-export const App = () => {
+export const App: React.FC = () => {
+  useEffect(() => {
+    // Apply the classList polyfill
+    applyClassListPolyfill();
+
+    // Polyfills for requestAnimationFrame and cancelAnimationFrame
+    (function () {
+      let lastTime = 0;
+      const vendors = ["webkit", "moz"];
+      for (
+        let x = 0;
+        x < vendors.length && !window.requestAnimationFrame;
+        ++x
+      ) {
+        window.requestAnimationFrame = (window as any)[
+          vendors[x] + "RequestAnimationFrame"
+        ];
+        window.cancelAnimationFrame =
+          (window as any)[vendors[x] + "CancelAnimationFrame"] ||
+          (window as any)[vendors[x] + "CancelRequestAnimationFrame"];
+      }
+
+      if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = function (
+          callback: FrameRequestCallback
+        ) {
+          const currTime = new Date().getTime();
+          const timeToCall = Math.max(0, 16 - (currTime - lastTime));
+          const id = window.setTimeout(
+            () => callback(currTime + timeToCall),
+            timeToCall
+          );
+          lastTime = currTime + timeToCall;
+          return id;
+        };
+      }
+
+      if (!window.cancelAnimationFrame) {
+        window.cancelAnimationFrame = function (id: number) {
+          clearTimeout(id);
+        };
+      }
+    })();
+
+    // Initialize the game manager
+    const gameManager = new GameManager(
+      4,
+      KeyboardInputManager,
+      HTMLActuator,
+      LocalStorageManager
+    );
+
+    // Additional setup for notice
+    const storage = new LocalStorageManager();
+    const noticeClose = document.querySelector(".notice-close-button");
+    const notice = document.querySelector(".app-notice");
+    if (storage.getNoticeClosed()) {
+      notice?.parentNode?.removeChild(notice);
+    } else {
+      noticeClose?.addEventListener("click", function () {
+        notice?.parentNode?.removeChild(notice);
+        storage.setNoticeClosed(true);
+        if (typeof ga !== "undefined") {
+          ga("send", "event", "notice", "closed");
+        }
+      });
+    }
+  }, []);
+
   return (
     <div className="App">
       <div className="container">
@@ -162,3 +236,5 @@ export const App = () => {
     </div>
   );
 };
+
+export default App;
